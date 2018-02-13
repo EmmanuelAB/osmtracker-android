@@ -64,7 +64,7 @@ public class ButtonsPresets extends Activity {
     }
 
     private void initializeAttributes(){
-        setTitle("Buttons Presets");
+        setTitle("Preset Buttons");
         setContentView(R.layout.buttons_presets);
         listener = new CheckBoxChangedListener();
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
