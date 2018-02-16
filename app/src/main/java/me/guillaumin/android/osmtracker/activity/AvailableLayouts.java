@@ -4,9 +4,11 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -17,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -110,13 +113,19 @@ public class AvailableLayouts extends Activity {
         LinearLayout rootLayout = (LinearLayout)findViewById(R.id.root_layout);
         int AT_START = 0; //the position to insert the view at
         ClickListener listener = new ClickListener();
-        for(String option : options){
-            TextView layoutTextView = new TextView(this);
-            layoutTextView.setHeight(200);
-            layoutTextView.setText(CustomLayoutsUtils.convertFileName(option, false));
-            layoutTextView.setTextSize((float)30);
-            layoutTextView.setOnClickListener(listener);
-            rootLayout.addView(layoutTextView,AT_START);
+
+        for(String option : options) {
+            Button layoutButton = new Button(this);
+            layoutButton.setHeight(150);
+            layoutButton.setText(CustomLayoutsUtils.convertFileName(option, false));
+            layoutButton.setTextSize((float)22 );
+            layoutButton.setTextColor(Color.WHITE);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            layoutParams.setMargins(110, 0, 110, 0);
+            layoutButton.setLayoutParams(layoutParams);
+            layoutButton.setPadding(10,20,10,20);
+            layoutButton.setOnClickListener(listener);
+            rootLayout.addView(layoutButton,AT_START);
         }
     }
 
@@ -373,9 +382,14 @@ public class AvailableLayouts extends Activity {
         public void onClick(View view) {
             final String layoutName = ""+((TextView) view).getText();
             String url = URLCreator.createMetadataFileURL(view.getContext(), layoutName);
+            final ProgressDialog dialog = new ProgressDialog(view.getContext());
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Checking local language versions");
+            dialog.show();
             new GetStringResponseTask(){
                 @Override
                 protected void onPostExecute(String response) {
+                    dialog.dismiss();
                     String xmlFile = response;
                     String localLang = Locale.getDefault().getLanguage();
                     String description = getDescriptionFor(xmlFile, localLang);
@@ -384,7 +398,6 @@ public class AvailableLayouts extends Activity {
                     } else {//List all other languages
                         HashMap<String, String> languages = getLanguagesFor(xmlFile);
                         showLanguageSelectionDialog(languages, xmlFile, layoutName);
-
                     }
                 }
             }.execute(url);
@@ -410,7 +423,10 @@ public class AvailableLayouts extends Activity {
 
             String info[] = {this.layoutName, this.iso};
             Log.e("#","Result "+info[0]+","+info[1]);
-
+            final ProgressDialog dialog = new ProgressDialog(this.context);
+            dialog.setMessage("Downloading...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.show();
             new DownloadCustomLayoutTask(this.context){
                 protected void onPostExecute(Boolean status){
                     String message="";
@@ -421,8 +437,8 @@ public class AvailableLayouts extends Activity {
                         message = "Download error";
                     }
                     Toast.makeText(getApplicationContext(),message,Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
                 }
-
             }.execute(info);
         }
     }
