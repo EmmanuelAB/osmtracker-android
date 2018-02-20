@@ -48,4 +48,14 @@
             android:padding="7dp"/>
 
     </LinearLayout>
+
+    <Button
+        android:id="@+id/AvailableLayouts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="50dp"
+        android:onClick="availableLayouts"
+        android:text="Available Layouts" />
+
 </LinearLayout>

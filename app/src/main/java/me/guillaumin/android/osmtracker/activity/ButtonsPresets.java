@@ -282,17 +282,23 @@ public class ButtonsPresets extends Activity {
         return iso;
     }
 
-    @Override
+    /*@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.launch_available_layouts_menu, menu);
         return super.onCreateOptionsMenu(menu);
-    }
+    }*/
 
-    @Override
+    /*@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.launch_available){
             startActivity(new Intent(this,AvailableLayouts.class));
         }
         return super.onOptionsItemSelected(item);
+    }*/
+
+
+    public void availableLayouts(View view){
+        startActivity(new Intent(this,AvailableLayouts.class));
     }
+
 }
