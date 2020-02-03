@@ -279,6 +279,10 @@ public class TrackDetail extends TrackDetailEditor implements AdapterView.OnItem
 	 */
 	private void exportTrack(){
 		new ExportToStorageTask(this, trackId).execute();
+
+		// Notify what happened, exporting bar dialog finishes very fast
+		Toast.makeText(this, R.string.various_export_finished, Toast.LENGTH_SHORT).show();
+
 		// Pick last list item (Exported date) and update it
 		SimpleAdapter adapter = ((SimpleAdapter) lv.getAdapter());
 		@SuppressWarnings("unchecked")
