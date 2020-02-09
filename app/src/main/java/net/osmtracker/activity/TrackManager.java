@@ -338,6 +338,8 @@ public class TrackManager extends ListActivity {
 		if (trackId != -1) {
 			new ExportToStorageTask(this, trackId).execute();
 			trackId = -1;
+			// Notify what happened, exporting bar dialog finishes very fast
+			Toast.makeText(this, R.string.various_export_finished, Toast.LENGTH_SHORT).show();
 		}
 	}
 
