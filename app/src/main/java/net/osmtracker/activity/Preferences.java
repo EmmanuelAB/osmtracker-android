@@ -23,10 +23,16 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import lib.folderpicker.FolderPicker;
 
 
 /**
@@ -59,6 +65,9 @@ public class Preferences extends PreferenceActivity {
 
 	public static final String ICONS_DIR_SUFFIX = "_icons";
 
+	private static final int STORAGE_PERMISSION_REQUEST_CODE = 1;
+	private static final int  PICK_FOLDER_REQUEST_CODE = 2;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -69,22 +78,29 @@ public class Preferences extends PreferenceActivity {
 		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// External storage directory
-		EditTextPreference storageDirPref = (EditTextPreference) findPreference(OSMTracker.Preferences.KEY_STORAGE_DIR);
+		Preference storageDirPref = (Preference) findPreference(OSMTracker.Preferences.KEY_STORAGE_DIR);
 		storageDirPref.setSummary(prefs.getString(OSMTracker.Preferences.KEY_STORAGE_DIR, OSMTracker.Preferences.VAL_STORAGE_DIR));
-		storageDirPref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+		storageDirPref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
-			public boolean onPreferenceChange(Preference preference, Object newValue) {
-				// Ensure there is always a leading slash
-				if (! ((String) newValue).startsWith(File.separator)) {
-					newValue = File.separator + (String) newValue;
-				}
-
-				// Set summary with the directory value
-				preference.setSummary((String) newValue);
-
+			public boolean onPreferenceClick(Preference preference) {
+				launchFolderPicker();
 				return true;
 			}
 		});
+		//		storageDirPref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+//			@Override
+//			public boolean onPreferenceChange(Preference preference, Object newValue) {
+//				// Ensure there is always a leading slash
+//				if (! ((String) newValue).startsWith(File.separator)) {
+//					newValue = File.separator + (String) newValue;
+//				}
+//
+//				// Set summary with the directory value
+//				preference.setSummary((String) newValue);
+//
+//				return true;
+//			}
+//		});
 
 		// Voice record duration
 		Preference pref = findPreference(OSMTracker.Preferences.KEY_VOICEREC_DURATION);
@@ -219,5 +235,64 @@ public class Preferences extends PreferenceActivity {
 		});
 
 	}
-	
+
+	private void launchFolderPicker(){
+		int writePermission = ContextCompat.checkSelfPermission(Preferences.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+		// Check for storage permissions before launching the activity
+		// since it's required to list directories and pick one
+		if ( writePermission != PackageManager.PERMISSION_GRANTED) {
+			// request the permission
+			ActivityCompat.requestPermissions(Preferences.this,
+					new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					STORAGE_PERMISSION_REQUEST_CODE);
+
+		} else {
+			// Permission granted
+			Intent intent = new Intent(Preferences.this, FolderPicker.class);
+			startActivityForResult(intent, PICK_FOLDER_REQUEST_CODE);
+		}
+
+
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if( resultCode == RESULT_OK && requestCode == PICK_FOLDER_REQUEST_CODE){
+			String folderLocation = data.getExtras().getString("data");
+			Log.e( "#", "folder:"+folderLocation );
+
+			// take only the last folder name
+			int i = folderLocation.lastIndexOf("0");
+			folderLocation = folderLocation.substring(i+1, folderLocation.length());
+
+
+			// save the directory
+			PreferenceManager.getDefaultSharedPreferences(this).edit().putString(
+					OSMTracker.Preferences.KEY_STORAGE_DIR,
+					folderLocation).commit();
+
+			// update the summary in UI
+			Preference storageDirPref = (Preference) findPreference(OSMTracker.Preferences.KEY_STORAGE_DIR);
+			storageDirPref.setSummary(folderLocation);
+
+		}
+
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		switch (requestCode) {
+			case STORAGE_PERMISSION_REQUEST_CODE: {
+				// If GRANTED
+				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+					launchFolderPicker();
+				else // DENIED
+					Toast.makeText(Preferences.this, "Storage permission is required for this action", Toast.LENGTH_LONG).show();
+				return;
+			}
+		}
+	}
 }

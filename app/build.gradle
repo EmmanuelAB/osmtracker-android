@@ -63,6 +63,7 @@ android {
 dependencies {
 
     implementation 'org.apache.james:apache-mime4j-core:0.8.3'
+    implementation 'com.github.Svoka:android-folder-picker-library:2.2'
 
     implementation ('org.apache.httpcomponents:httpmime:4.5.11')
     //implementation 'org.apache.httpcomponents:httpclient-android:4.3.5'
@@ -108,4 +109,5 @@ android.applicationVariants.all { variant ->
 }
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }

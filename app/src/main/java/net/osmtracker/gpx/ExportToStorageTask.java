@@ -30,7 +30,12 @@ public class ExportToStorageTask extends ExportTrackTask {
 	@Override
 	protected File getExportDirectory(Date startDate) throws ExportTrackException {
 		File sdRoot = Environment.getExternalStorageDirectory();
-		
+
+		Log.e("#", ""+Environment.getDataDirectory());
+        Log.e("#", ""+Environment.getDownloadCacheDirectory());
+        Log.e("#", ""+Environment.getExternalStorageDirectory());
+        Log.e("#", ""+Environment.getRootDirectory());
+
 		// The location that the user has specified gpx files 
 		// and associated content to be written
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

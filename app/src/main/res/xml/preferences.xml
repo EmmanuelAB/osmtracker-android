@@ -45,7 +45,7 @@
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/prefs_output">
-		<EditTextPreference android:key="logging.storage.dir"
+		<Preference android:key="logging.storage.dir"
 			android:defaultValue="/osmtracker" android:title="@string/prefs_storage_dir" android:dialogMessage="@string/prefs_storage_dir_hint"/>
 		<CheckBoxPreference
 			android:key="gpx.directory_per_track"
