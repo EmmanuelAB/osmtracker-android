@@ -20,12 +20,14 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static net.osmtracker.Layouts.TestUtils.*;
 import static org.junit.Assert.assertFalse;
 
-public class DeleteLayoutTest {
+public class UpdateLayoutTest {
 
     // Must start in TrackManager and navigate to ButtonsPresets because the files
     // of the layout need to be installed before ButtonsPresets loads
@@ -52,10 +54,9 @@ public class DeleteLayoutTest {
      * Assumes being in the ButtonsPresets activity
      * Deletes the layout with the received name
      */
-    private void deleteLayout(String layoutName){
+    private void updateLayout(String layoutName){
         onView(withText(layoutName)).perform(longClick());
-        onView(withText("Delete")).perform(click());
-        onView(withText("YES")).perform(click());
+        onView(withText("Update & Install")).perform(click());
     }
 
 
@@ -68,31 +69,24 @@ public class DeleteLayoutTest {
      *  - The icons directory is deleted
      */
     @Test
-    public void layoutDeletionTest(){
-        String layoutName = "mock";
+    public void layoutUpdateTest(){
 
         // Make sure there is at least one layout installed
-        injectMockLayout(layoutName);
+        String layoutName = "maxspeed";
+        injectMockLayout(layoutName, "en");
 
         navigateToButtonsPresets();
 
-        deleteLayout(layoutName);
+        updateLayout(layoutName);
 
-        // Check the informative Toast is shown
-        checkToastIsShownWith("The file was deleted successfully");
+        // Check the spinner is shown
+        onView(withText("Updating...")).check(doesNotExist());
 
-        // Check the layout doesn't appear anymore
-        onView(withText(layoutName)).check(doesNotExist());
+        // Check the successful Toast is shown
+        checkToastIsShownWith("Layout was updated successfully");
 
-        // List files after the deletion
-        ArrayList<String> filesAfterDeletion = listFiles(getLayoutsDirectory());
-
-        // Check the xml file was deleted
-        assertFalse(filesAfterDeletion.contains(layoutName+"_es.xml"));
-
-        // Check the icons folder was deleted
-        assertFalse(filesAfterDeletion.contains(layoutName+"_icons"));
-
+        // Check the layout still shows in the UI
+        onView(withText(layoutName)).check(matches(isDisplayed()));
     }
 
 
@@ -100,11 +94,11 @@ public class DeleteLayoutTest {
      * Install a mock layout in the phone
      *  - Creates the xml, the icons directory and some empty png files inside
      */
-    public void injectMockLayout(String layoutName) {
+    public void injectMockLayout(String layoutName, String iso) {
         File layoutsDir = getLayoutsDirectory();
 
         // Create a mock layout file
-        File newLayout = createFile(layoutsDir,layoutName+"_es.xml");
+        File newLayout = createFile(layoutsDir,layoutName+"_"+iso+".xml");
         writeToFile(newLayout, MockData.MOCK_LAYOUT_CONTENT);
 
         // Create the icons directory
