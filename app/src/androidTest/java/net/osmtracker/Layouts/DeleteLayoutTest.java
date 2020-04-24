@@ -55,7 +55,7 @@ public class DeleteLayoutTest {
     private void deleteLayout(String layoutName){
         onView(withText(layoutName)).perform(longClick());
         onView(withText("Delete")).perform(click());
-        onView(withText("YES")).perform(click());
+        onView(withText("Yes")).perform(click());
     }
 
 
