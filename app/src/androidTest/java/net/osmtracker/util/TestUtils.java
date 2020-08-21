@@ -24,9 +24,9 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
  */
 public class TestUtils {
 
-    public static String TESTING_GITHUB_USER = "labexp";
+    public static String TESTING_GITHUB_USER = "emmanuelab";
     public static String TESTING_GITHUB_REPOSITORY = "osmtracker-android-layouts";
-    public static String TESTING_GITHUB_BRANCH = "for_tests";
+    public static String TESTING_GITHUB_BRANCH = "create_with_icons";
 
     /**
      * List all the files in a folder and return a list of the names
@@ -114,6 +114,18 @@ public class TestUtils {
         File layoutsDirectory = new File(appDirectory + File.separator + Preferences.LAYOUTS_SUBDIR);
         layoutsDirectory.mkdirs();
         return layoutsDirectory;
+    }
+
+    public static File getLayoutIconsDirectoryFor(String layoutName){
+        File layoutsDirectory = getLayoutsDirectory();
+        String finalPath = layoutsDirectory.getPath() + File.separator + layoutName + Preferences.ICONS_DIR_SUFFIX;
+        return new File(finalPath);
+    }
+
+    public static File getLayoutFileFor(String layoutName, String locale){
+        File layoutsDirectory = getLayoutsDirectory();
+        String finalPath = layoutsDirectory.getPath() + File.separator +layoutName + "_" + locale + Preferences.LAYOUT_FILE_EXTENSION;
+        return new File(finalPath);
     }
 
     public static void checkToastIsShownWith(String text){

@@ -1,46 +1,110 @@
 package net.osmtracker.layouts;
 
-import android.support.test.espresso.Espresso;
-import android.support.test.espresso.assertion.ViewAssertions;
+import android.Manifest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.rule.GrantPermissionRule;
 
 import net.osmtracker.R;
-import net.osmtracker.activity.TrackManager;
+import net.osmtracker.activity.AvailableLayouts;
 import net.osmtracker.util.TestUtils;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
-import static android.support.test.espresso.Espresso.onData;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
 import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
+import static net.osmtracker.util.TestUtils.getLayoutsDirectory;
+import static net.osmtracker.util.TestUtils.injectMockLayout;
+import static org.apache.commons.io.FileUtils.deleteDirectory;
 
 public class DownloadLayoutTest {
+
     @Rule
-    public ActivityTestRule<TrackManager> mRule = new ActivityTestRule<>(TrackManager.class);
+    public GrantPermissionRule writePermission = GrantPermissionRule.grant(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-    @Test
-    public void downloadLayoutTest() {
+    @Rule
+    public ActivityTestRule<AvailableLayouts> mRule = new ActivityTestRule(AvailableLayouts.class);
+
+    //    @Rule
+//    public ActivityTestRule<AvailableLayouts> mRule = new ActivityTestRule(AvailableLayouts.class){
+//        @Override
+//        protected void beforeActivityLaunched() {
+//            //Makes sure that only the mock layout exists
+//            deleteLayoutsDirectory();
+//            TestUtils.setLayoutsTestingRepository();
+//        }
+//    };
+
+    String layoutWithoutIcons = "abc";
+
+    String layoutWithIcons = "xyz";
+    List<String> expectedIcons = Arrays.asList("x.png", "y.png", "z.png");
+
+    String locale = "en";
+
+    String successfulMessage = TestUtils.getStringResource(R.string.available_layouts_successful_download);
+
+
+    @Before
+    public void setUp(){
         deleteLayoutsDirectory();
-
         TestUtils.setLayoutsTestingRepository();
+    }
 
-        String layoutName = "ABC";
+    /**
+     * Download a layout and check:
+     *      - the xml file is created
+     *      - success message is shown
+     */
+    @Test
+    public void downloadLayoutWithoutIconsTest() {
 
-        navigateToAvailableLayouts();
+        clickButtonsToDownloadLayout(layoutWithoutIcons);
 
-        clickButtonsToDownloadLayout(layoutName);
+        TestUtils.checkToastIsShownWith(successfulMessage);
 
-        makePostDownloadAssertions(layoutName);
+        assertTrue(layoutFileIsDownloaded(layoutWithoutIcons, locale));
+
+    }
+
+    /**
+     * Download a layout and check:
+     *     - the xml is created
+     *     - the icons folder is created
+     *     - the icons are downloaded
+     *     - success message is shown
+     */
+    @Test
+    public void downloadLayoutWithIconsTest() {
+
+        clickButtonsToDownloadLayout(layoutWithIcons);
+
+        TestUtils.checkToastIsShownWith(successfulMessage);
+
+        assertTrue(layoutFileIsDownloaded(layoutWithIcons, locale));
+
+        File iconsDirectory = TestUtils.getLayoutIconsDirectoryFor(layoutWithIcons);
+        assertTrue(iconsDirectory.exists());
+
+        List<String> icons = TestUtils.listFiles(iconsDirectory);
+        assertTrue(icons.containsAll(expectedIcons));
+
+    }
+
+
+    public boolean layoutFileIsDownloaded(String layoutName, String locale) {
+        File layoutFile = TestUtils.getLayoutFileFor(layoutName, locale);
+        return layoutFile.exists();
     }
 
 
@@ -51,47 +115,6 @@ public class DownloadLayoutTest {
             e.printStackTrace();
             fail();
         }
-    }
-
-
-    /**
-     * Assuming being in TrackManager
-     */
-    public void navigateToAvailableLayouts(){
-        openActionBarOverflowOrOptionsMenu(getInstrumentation().getTargetContext());
-
-        onView(withText(TestUtils.getStringResource(R.string.menu_settings))).perform(click());
-
-        onData(withTitleText(TestUtils.getStringResource(R.string.prefs_ui_buttons_layout))).perform(scrollTo(), click());
-
-        onView(withId(R.id.launch_available)).perform(click());
-    }
-
-
-    /**
-     * Check the new layouts appears as a new option
-     * Select the layout and check its buttons are shown when tracking
-     * @param layoutName
-     */
-    private void makePostDownloadAssertions(String layoutName) {
-        Espresso.pressBack();
-
-        // Check the layout appears as a new option in AvailableLayouts
-        onView(withText(layoutName.toLowerCase())).check(ViewAssertions.matches(isDisplayed()));
-
-        // Select the layout
-        onView(withText(layoutName.toLowerCase())).perform(click());
-
-        // Go to TrackLogger
-        Espresso.pressBack();
-        Espresso.pressBack();
-        onView(withId(R.id.trackmgr_hint_icon)).perform(click());
-
-        // Check the buttons are loaded correctly
-        String expectedButtonsLabels[] = new String[]{"A", "B", "C"};
-        for(String label : expectedButtonsLabels)
-            onView(withText(label)).check(ViewAssertions.matches(isDisplayed()));
-
     }
 
 
